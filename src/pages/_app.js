@@ -9,7 +9,7 @@ export default function App({ Component, pageProps }) {
         <title>Alternative</title>
       </Head>
       <Toaster closeButton richColors position="top-right" />
-      <Component {...pageProps} />;
+      <Component {...pageProps} />
     </>
   );
 }
