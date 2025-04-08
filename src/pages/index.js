@@ -57,7 +57,7 @@ export default function Home() {
       </Suspense>
 
       {/* Sección de ofertas secundarias */}
-      <section id="contact" className="py-12 bg-gradient-to-br from-black to-zinc-900">
+      <div id="contact" className="py-12 bg-gradient-to-br from-black to-zinc-900">
         <div className="container mx-auto px-4 sm:px-6">
         {/* <div className="bg-zinc-900/70 backdrop-blur-md rounded-2xl shadow-2xl border border-zinc-800 p-8 lg:p-10"> */}
           <div className="bg-zinc-900/70 backdrop-blur-md rounded-2xl shadow-2xl border border-zinc-800 p-8 lg:p-10">
@@ -76,7 +76,7 @@ export default function Home() {
             </Suspense>
           </div>
         </div>
-      </section>
+      </div>
 
       {/* Footer optimizado */}
       <footer id="contacto" className="bg-black py-10 border-t border-zinc-900 transition-all duration-300">
