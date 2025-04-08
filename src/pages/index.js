@@ -59,14 +59,14 @@ export default function Home() {
       {/* Sección de ofertas secundarias */}
       <div id="contact" className="py-12 bg-gradient-to-br from-black to-zinc-900">
         <div className="container mx-auto px-4 sm:px-6">
-        {/* <div className="bg-zinc-900/70 backdrop-blur-md rounded-2xl shadow-2xl border border-zinc-800 p-8 lg:p-10"> */}
+          {/* <div className="bg-zinc-900/70 backdrop-blur-md rounded-2xl shadow-2xl border border-zinc-800 p-8 lg:p-10"> */}
           <div className="bg-zinc-900/70 rounded-2xl shadow-2xl border border-zinc-800 p-8 lg:p-10">
-          
+
             <div className="text-center mb-10">
-              <h2 className="text-2xl md:text-3xl font-bold mb-4 text-white">Aprovecha nuestras ofertas</h2>
+              <h2 className="text-2xl md:text-3xl font-bold mb-4 text-white">Quiero realizar la compra</h2>
               <div className="h-1 w-32 bg-red-600 mx-auto rounded-full"></div>
               <p className="text-gray-400 mt-6 max-w-2xl mx-auto">
-                Realiza tu compra de forma instantánea y recibe tus licencias en menos de 30 minutos. Soporte técnico disponible 24/7.
+                Rellena el formulario para que un asesor se comunique contigo y continúes con tu compra
               </p>
             </div>
 
