@@ -1,24 +1,31 @@
 // pages/index.js
-import React, { Suspense } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { SparklesIcon } from "@heroicons/react/24/solid";
+import {
+  SparklesIcon,
+} from "@heroicons/react/24/solid";
 import Image from "next/image";
-import Head from 'next/head';
-
-// Importamos los componentes y servicios con lazy loading
-const ProductsSection = React.lazy(() => import('@/components/ProductsSection'));
-const ContactForm = React.lazy(() => import('@/components/ContactForm'));
+// Importamos los componentes y servicios
+import ProductsSection from '@/components/ProductsSection';
+import ContactForm from '@/components/ContactForm';
+import { toast } from 'sonner';
 
 export default function Home() {
-  return (
-    <div className="min-h-screen bg-black text-gray-200 transition-colors duration-300">
-      {/* Header con SEO */}
-      <Head>
-        <meta name="description" content="Las mejores ofertas en juegos y licencias hasta el 50% de descuento. Compra fácil y rápido" />
-        <title>Alternativa - Ofertas de Juegos y Licencias</title>
-      </Head>
+  // Estado para controlar la animación de carga
+  const [isPageLoaded, setIsPageLoaded] = useState(false);
 
+  // Efecto para manejar el montaje del componente
+  useEffect(() => {
+    // Simulamos un tiempo de carga para la animación
+    setTimeout(() => {
+      setIsPageLoaded(true);
+    }, 200);
+  }, []);
+
+  return (
+    <div className={`min-h-screen bg-black text-gray-200 transition-colors duration-300 ${isPageLoaded ? 'opacity-100' : 'opacity-0'}`}>
+      {/* Header - Mejorado con navegación */}
       <header className="bg-black text-white py-4 px-6 shadow-sm border-b border-zinc-800 sticky top-0 z-50 transition-all duration-300">
         <div className="container mx-auto flex justify-center items-center">
           <div className="flex items-center">
@@ -28,13 +35,12 @@ export default function Home() {
               width={180}
               height={50}
               className="h-8 w-auto"
-              priority // Asegura que el logo se cargue de inmediato
             />
           </div>
         </div>
       </header>
 
-      {/* Hero Section */}
+      {/* Hero Section - Mejorado con gradientes y animaciones */}
       <section className="relative py-10 md:py-20 overflow-hidden bg-gradient-to-br from-zinc-900 to-black transition-all duration-300">
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-10">
           <div className="absolute -top-[40%] -right-[30%] w-96 h-96 bg-red-500 rounded-full blur-3xl"></div>
@@ -51,15 +57,15 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Sección de productos optimizada con lazy loading */}
-      <Suspense fallback={<div>Loading...</div>}>
-        <ProductsSection />
-      </Suspense>
+      {/* Sección de Productos - Ahora como un componente separado */}
+      <ProductsSection />
+      
 
-      {/* Sección de ofertas secundarias */}
+      {/* Secondary Offers Section - Con diseño mejorado */}
       <section id="contact" className="py-12 sm:py-16 bg-gradient-to-br from-black to-zinc-900 transition-all duration-300">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="bg-zinc-900/70 backdrop-blur-md rounded-2xl shadow-2xl border border-zinc-800 p-8 lg:p-10">
+
             <div className="text-center mb-10 relative z-10">
               <h2 className="text-2xl md:text-3xl font-bold mb-4 text-white">Aprovecha nuestras ofertas</h2>
               <div className="h-1 w-32 bg-red-600 mx-auto rounded-full"></div>
@@ -68,15 +74,13 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Formulario de contacto optimizado */}
-            <Suspense fallback={<div>Loading...</div>}>
-              <ContactForm />
-            </Suspense>
+            {/* Componente de formulario separado */}
+            <ContactForm />
           </div>
         </div>
       </section>
 
-      {/* Footer optimizado */}
+      {/* Footer - Rediseñado */}
       <footer id="contacto" className="bg-black py-10 border-t border-zinc-900 transition-all duration-300">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="flex flex-col items-center justify-center text-center">
@@ -87,13 +91,27 @@ export default function Home() {
                 width={140}
                 height={35}
                 className="h-8 w-auto"
-                priority // Asegura que el logo del pie de página se cargue rápido
               />
             </div>
+
             <p className="text-sm text-gray-500">© {new Date().getFullYear()} Alternative. Todos los derechos reservados.</p>
           </div>
         </div>
       </footer>
+
+      {/* CSS para animaciones */}
+      <style jsx global>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </div>
   );
 }

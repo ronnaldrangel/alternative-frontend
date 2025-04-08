@@ -4,7 +4,7 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
-        <link href="https://rsms.me/inter/inter.css" rel="stylesheet" />
+        {/* <link href="https://rsms.me/inter/inter.css" rel="stylesheet" /> */}
         {/* Agrega el script de Google Tag Manager aquí */}
         <script
           dangerouslySetInnerHTML={{
