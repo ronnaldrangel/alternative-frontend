@@ -143,7 +143,7 @@ const ContactForm = () => {
               autoComplete="tel"
               inputMode="numeric"
               maxLength={9}
-              placeholder="Número de WhatsApp valido"
+              placeholder="Número de WhatsApp"
               className="w-full rounded-l-none rounded-r-xl bg-zinc-800 border border-zinc-700 px-4 py-3 text-base text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent"
             />
           </div>
@@ -170,7 +170,7 @@ const ContactForm = () => {
               </>
             ) : (
               <>
-                Obtener ofertas
+                Continuar
                 <ArrowRightIcon className="ml-2 w-4 h-4" />
               </>
             )}
