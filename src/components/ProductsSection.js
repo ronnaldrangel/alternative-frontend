@@ -183,7 +183,7 @@ const ProductsSection = () => {
               className={`h-2 w-2 rounded-full ${index === 0 ? 'bg-green-500' : 'bg-zinc-600'}`}
             />
           ))}
-          {products.length > 5 && <div className="text-zinc-500 text-xs">...</div>}
+          {products.length > 5 && <div className="text-zinc-500 text-xs"></div>}
         </div>
       </div>
     );

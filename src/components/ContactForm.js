@@ -1,13 +1,15 @@
 // components/ContactForm.js
+import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import Image from "next/image";
 import { toast } from 'sonner';
 import { UserIcon, PhoneIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
 
 // Webhook URL
-const WEBHOOK_URL = process.env.WEBHOOK_URL_N8N;
+const WEBHOOK_URL = process.env.NEXT_PUBLIC_WEBHOOK_URL;
 
 const ContactForm = () => {
+  const router = useRouter(); // Inicializar el hook router
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     nombre: '',
@@ -62,9 +64,13 @@ const ContactForm = () => {
       
       if (!response.ok) throw new Error(`Error: ${response.status}`);
       
-      toast.success('Sesión iniciada correctamente.');
+      toast.success('Enviado correctamente.');
       setFormData({ nombre: '', telefono: '' });
-      
+
+      // Redirigir a la página de éxito cuando se envíe correctamente
+      router.push('/thank-you');
+
+
     } catch (error) {
       console.error("Error al enviar formulario:", error);
       toast.error('Hubo un error al enviar el formulario.');
@@ -141,7 +147,7 @@ const ContactForm = () => {
               className="w-full rounded-l-none rounded-r-xl bg-zinc-800 border border-zinc-700 px-4 py-3 text-base text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent"
             />
           </div>
-          <p className="mt-1 text-sm text-gray-400">Recibirás las licencias vía WhatsApp</p>
+          {/* <p className="mt-1 text-sm text-gray-400">Recibirás las licencias vía WhatsApp</p> */}
           {errors.telefono && (
             <p className="mt-1 text-sm text-red-500">{errors.telefono}</p>
           )}
