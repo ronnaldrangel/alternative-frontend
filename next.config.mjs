@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['minio.wazend.net'], // Agrega el dominio aquí
+    domains: ['minio.wazend.net', 'landing-alternative.b-cdn.net'], // Agrega el dominio aquí
   },
 };
 
