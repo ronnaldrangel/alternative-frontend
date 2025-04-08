@@ -62,7 +62,7 @@ export default function Home() {
       
 
       {/* Secondary Offers Section - Con diseño mejorado */}
-      <section id="ofertas" className="py-12 sm:py-16 bg-gradient-to-br from-black to-zinc-900 transition-all duration-300">
+      <section id="contact" className="py-12 sm:py-16 bg-gradient-to-br from-black to-zinc-900 transition-all duration-300">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="bg-zinc-900/70 backdrop-blur-md rounded-2xl shadow-2xl border border-zinc-800 p-8 lg:p-10">
 
