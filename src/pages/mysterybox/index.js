@@ -1,202 +1,394 @@
 import { useState, useEffect } from 'react';
+import { LockClosedIcon, EnvelopeIcon, ExclamationCircleIcon } from '@heroicons/react/24/solid';
+import { toast } from 'sonner';
 
-const MysteryBox = () => {
+// Componentes modulares
+import CyberpunkScanAnimation from './CyberpunkScanAnimation';
+import CyberpunkConfetti from './CyberpunkConfetti';
+import CyberpunkPrize from './CyberpunkPrize';
+
+// Constante para la duración exacta de la animación en milisegundos
+const SCAN_DURATION_MS = 30000; // 30 segundos exactamente
+
+const CyberpunkMysteryBox = () => {
   const [code, setCode] = useState('');
+  const [email, setEmail] = useState('');
   const [step, setStep] = useState('input'); // 'input', 'animation', 'prize'
   const [prize, setPrize] = useState('');
+  const [prizeName, setPrizeName] = useState('');
+  const [prizes, setPrizes] = useState([]);
   const [error, setError] = useState('');
   const [animationProgress, setAnimationProgress] = useState(0);
+  const [showConfetti, setShowConfetti] = useState(false);
+  
+  // Estado para controlar el temporizador de la animación
+  const [scanStartTime, setScanStartTime] = useState(null);
+  const [animationTimer, setAnimationTimer] = useState(null);
 
-  // Lista de códigos válidos y sus premios
-  const validCodes = {
-    '123456': '¡Un iPhone 15!',
-    'PREMIO2023': '¡Una PlayStation 5!',
-    'GANADOR': '¡Viaje a París!',
-    'REGALO': '¡Tarjeta de regalo de $100!',
-    'MISTERIO': '¡Un set de auriculares premium!',
-  };
-
-  const handleSubmit = (e) => {
+  // Manejar envío del formulario
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validar campos vacíos (validación mínima en el frontend)
     if (code.trim() === '') {
       setError('Por favor ingresa un código');
+      toast.error('Por favor ingresa un código');
       return;
     }
-
-    if (validCodes[code]) {
-      setError('');
-      setPrize(validCodes[code]);
-      setStep('animation');
+    
+    if (email.trim() === '') {
+      setError('Por favor ingresa tu email');
+      toast.error('Por favor ingresa tu email');
+      return;
+    }
+    
+    // Validación básica de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Por favor ingresa un email válido');
+      toast.error('Por favor ingresa un email válido');
+      return;
+    }
+    
+    // Enviar datos al webhook para validación
+    try {
+      const webhookUrl = process.env.NEXT_PUBLIC_WEBHOOK_TICKET_URL;
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          code: code
+        }),
+      });
       
-      // Iniciar la animación
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress += 1;
-        setAnimationProgress(progress);
-        if (progress >= 100) {
-          clearInterval(interval);
-          setTimeout(() => {
-            setStep('prize');
-          }, 500);
-        }
-      }, 30);
-    } else {
-      setError('Código inválido. Intenta de nuevo.');
+      const data = await response.json();
+      
+      if (data.error) {
+        // Si el webhook responde con error, mostrar toast pero no iniciar el escaneo
+        setError(data.message || 'Código inválido. Intenta de nuevo.');
+        toast.error(data.message || 'Código inválido. Intenta de nuevo.');
+        return;
+      }
+      
+      // Limpiar cualquier error previo
+      setError('');
+      
+      // Manejar diferentes formatos de respuesta para premios
+      if (data.prizes && Array.isArray(data.prizes) && data.prizes.length > 0) {
+        // Si recibimos un array de premios
+        setPrizes(data.prizes);
+      } else if (data.prize) {
+        // Si recibimos un solo premio en formato tradicional
+        setPrize(data.prize);
+        setPrizeName(data.prizeName || '');
+        // También lo convertimos al nuevo formato para compatibilidad
+        setPrizes([{
+          name: data.prize,
+          description: data.prizeName || ''
+        }]);
+      } else {
+        // Formato de respuesta inesperado, pero continuamos con un premio genérico
+        setPrize('¡Premio misterioso!');
+        setPrizes([{ name: '¡Premio misterioso!' }]);
+      }
+      
+      // Iniciar la animación de escaneo
+      startScanAnimation();
+    } catch (error) {
+      setError('Error de conexión. Intenta de nuevo más tarde.');
+      toast.error('Error de conexión. Intenta de nuevo más tarde.');
     }
   };
 
-  // Efecto para la animación de confeti cuando se muestra el premio
+  // Función para iniciar la animación de escaneo con duración fija
+  const startScanAnimation = () => {
+    // Cambiar a la pantalla de animación
+    setStep('animation');
+    
+    // Resetear el progreso
+    setAnimationProgress(0);
+    
+    // Registrar el tiempo de inicio
+    const startTime = Date.now();
+    setScanStartTime(startTime);
+    
+    console.log(`Inicio de escaneo: ${new Date(startTime).toLocaleTimeString()}`);
+    console.log(`Duración prevista: 30 segundos`);
+    
+    // Crear un array de 100 pasos para la animación (0% a 100%)
+    const steps = Array.from({ length: 101 }, (_, i) => i);
+    
+    // Calcular el tiempo de inicio y fin para cada paso
+    const animationPlan = steps.map(step => {
+      // Cada paso debe ocurrir en un momento específico durante los 30 segundos
+      const timeOffset = (step / 100) * SCAN_DURATION_MS;
+      return {
+        step,
+        executeAt: startTime + timeOffset
+      };
+    });
+    
+    // Configurar temporizadores individuales para cada paso
+    animationPlan.forEach(({ step, executeAt }) => {
+      const timeoutId = setTimeout(() => {
+        if (step <= 100) { // Verificación de seguridad
+          setAnimationProgress(step);
+          
+          // Si es el último paso, mostrar el premio después de un breve retraso
+          if (step === 100) {
+            const endTime = Date.now();
+            const actualDuration = (endTime - startTime) / 1000;
+            console.log(`Fin de escaneo: ${new Date(endTime).toLocaleTimeString()}`);
+            console.log(`Duración real: ${actualDuration.toFixed(2)} segundos`);
+            
+            setTimeout(() => setStep('prize'), 500);
+          }
+        }
+      }, executeAt - startTime);
+      
+      // Almacenar el ID del temporizador para limpieza
+      setAnimationTimer(prev => [...(prev || []), timeoutId]);
+    });
+  };
+
+  // Limpiar temporizadores al desmontar o resetear
+  useEffect(() => {
+    return () => {
+      if (animationTimer && animationTimer.length > 0) {
+        animationTimer.forEach(id => clearTimeout(id));
+      }
+    };
+  }, [animationTimer]);
+
+  // Efecto para la animación de premio
   useEffect(() => {
     if (step === 'prize') {
-      // Aquí iría código adicional para efectos especiales al mostrar el premio
-      // Por simplicidad, no lo implementamos completamente
+      // Mostrar confeti
+      setShowConfetti(true);
+      
+      // Reproducir sonido de celebración si está disponible
+      try {
+        const audio = new Audio('/confetti-sound.mp3');
+        audio.volume = 0.5;
+        audio.play().catch(e => console.log('Audio play failed:', e));
+      } catch (e) {
+        console.log('Audio not supported:', e);
+      }
+      
+      // Ocultar el confeti después de 20 segundos
+      const timer = setTimeout(() => {
+        setShowConfetti(false);
+      }, 20000);
+      
+      return () => clearTimeout(timer);
     }
   }, [step]);
 
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-purple-900 to-indigo-800 p-4">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-2xl overflow-hidden">
-        <div className="p-8">
-          <h1 className="text-3xl font-bold text-center text-indigo-800 mb-6">Caja Misteriosa</h1>
-          
-          {step === 'input' && (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-1">
-                  Ingresa tu código secreto
-                </label>
-                <input
-                  type="text"
-                  id="code"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="Ejemplo: 123456"
-                />
-                {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
-              </div>
-              <button
-                type="submit"
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200"
-              >
-                ¡Descubrir Premio!
-              </button>
-            </form>
-          )}
+  // Función para volver al inicio
+  const handleReset = () => {
+    // Limpiar todos los temporizadores pendientes
+    if (animationTimer && animationTimer.length > 0) {
+      animationTimer.forEach(id => clearTimeout(id));
+      setAnimationTimer(null);
+    }
+    
+    // Resetear estados
+    setStep('input');
+    setCode('');
+    setPrize('');
+    setPrizeName('');
+    setPrizes([]);
+    setAnimationProgress(0);
+    setShowConfetti(false);
+    setScanStartTime(null);
+  };
 
-          {step === 'animation' && (
-            <div className="py-10 flex flex-col items-center">
-              <div className="relative w-40 h-40 mb-8">
-                {/* Caja animada */}
-                <div className={`absolute inset-0 transition-all duration-300 ease-out ${
-                  animationProgress > 50 ? 'scale-110 opacity-90' : 'scale-100 opacity-100'
-                }`}>
-                  <div className="w-full h-full bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg shadow-lg flex items-center justify-center">
-                    <div className={`transition-all duration-500 ${
-                      animationProgress > 70 ? 'opacity-0' : 'opacity-100'
-                    }`}>
-                      <svg className="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M5 5a3 3 0 015-2.236A3 3 0 0114.83 6H16a2 2 0 110 4h-5V9a1 1 0 10-2 0v1H4a2 2 0 110-4h1.17A3 3 0 015 5zm4 1V5a1 1 0 10-2 0v1H5a1 1 0 100 2h2v1a2 2 0 104 0V8h2a1 1 0 100-2h-2V5a1 1 0 10-2 0v1H7zM9 11a1 1 0 011-1h5a1 1 0 110 2h-5a1 1 0 01-1-1zm1 3a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
-                      </svg>
+  return (
+    <div className="relative flex flex-col items-center justify-center min-h-screen bg-black overflow-hidden">
+      {/* Componente de confeti */}
+      <CyberpunkConfetti show={showConfetti} />
+      
+      {/* Contenedor principal */}
+      <div className="relative z-10 w-full max-w-md">
+        <div className="relative bg-gray-900 bg-opacity-80 backdrop-blur-sm rounded-xl border border-cyan-500 shadow-2xl overflow-hidden">
+          {/* Detalles tecnológicos decorativos */}
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-cyan-500"></div>
+          <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-cyan-500 via-purple-500 to-cyan-500"></div>
+          <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-cyan-500"></div>
+          <div className="absolute top-0 right-0 w-1 h-full bg-gradient-to-b from-cyan-500 via-purple-500 to-cyan-500"></div>
+          
+          {/* Esquinas con detalle cyber */}
+          <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-cyan-400"></div>
+          <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-cyan-400"></div>
+          <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-cyan-400"></div>
+          <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-cyan-400"></div>
+          
+          <div className="p-8">
+            <h1 className="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500 mb-6 tracking-wider">
+              CYBER<span className="text-cyan-400">BOX</span>_
+            </h1>
+            
+            {/* Sección de entrada de código */}
+            {step === 'input' && (
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Campo de Email - Ahora primero */}
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-cyan-400 mb-1 uppercase tracking-wider">
+                    // Dirección de contacto
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="email"
+                      id="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full px-4 py-3 bg-gray-800 text-cyan-300 rounded-lg border border-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent placeholder-cyan-700"
+                      placeholder="usuario@dominio.com"
+                    />
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                      <EnvelopeIcon className="h-5 w-5 text-cyan-500" />
                     </div>
                   </div>
                 </div>
                 
-                {/* Efectos de brillo */}
-                {animationProgress > 60 && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-full h-full absolute">
-                      {[...Array(8)].map((_, i) => (
-                        <div 
-                          key={i} 
-                          className="absolute bg-white rounded-full opacity-0 animate-ping"
-                          style={{
-                            width: `${Math.random() * 10 + 5}px`,
-                            height: `${Math.random() * 10 + 5}px`,
-                            top: `${Math.random() * 100}%`,
-                            left: `${Math.random() * 100}%`,
-                            animationDuration: `${Math.random() * 2 + 0.5}s`,
-                            animationDelay: `${Math.random() * 0.5}s`
-                          }}
-                        />
-                      ))}
+                {/* Campo de Código - Ahora segundo */}
+                <div>
+                  <label htmlFor="code" className="block text-sm font-medium text-cyan-400 mb-1 uppercase tracking-wider">
+                    // Ingresa código de acceso
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      id="code"
+                      value={code}
+                      onChange={(e) => setCode(e.target.value)}
+                      className="w-full px-4 py-3 bg-gray-800 text-cyan-300 rounded-lg border border-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent placeholder-cyan-700"
+                      placeholder="XXXX-XXXX-XXXX"
+                    />
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                      <LockClosedIcon className="h-5 w-5 text-cyan-500" />
                     </div>
                   </div>
-                )}
-              </div>
-              
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
-                <div 
-                  className="bg-indigo-600 h-2.5 rounded-full transition-all duration-200 ease-out" 
-                  style={{ width: `${animationProgress}%` }}
-                ></div>
-              </div>
-              <p className="mt-4 text-gray-700 font-medium">Descubriendo premio...</p>
-            </div>
-          )}
+                  
+                  {/* Mensaje de error */}
+                  {error && (
+                    <p className="mt-2 text-sm text-red-500 flex items-center">
+                      <ExclamationCircleIcon className="w-4 h-4 mr-1" />
+                      {error}
+                    </p>
+                  )}
+                </div>
+                
+                {/* Botón de envío */}
+                <button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-500 hover:to-purple-500 text-white font-bold py-3 px-4 rounded-lg transition duration-200 relative overflow-hidden group"
+                >
+                  <span className="relative z-10 uppercase tracking-wider">Iniciar Escaneo</span>
+                  <span className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-cyan-400 to-purple-400 opacity-0 group-hover:opacity-20 transition-opacity"></span>
+                </button>
+                
+                {/* Botón de Comprar Ticket */}
+                <button
+                  type="button"
+                  onClick={() => window.open('#', '_blank')}
+                  className="w-full mt-4 bg-gray-800 border border-cyan-500 hover:bg-gray-700 text-cyan-400 font-bold py-3 px-4 rounded-lg transition duration-200 relative overflow-hidden group"
+                >
+                  <span className="relative z-10 uppercase tracking-wider">Comprar Ticket</span>
+                  <span className="absolute top-0 left-0 w-full h-full bg-cyan-500 opacity-0 group-hover:opacity-10 transition-opacity"></span>
+                </button>
+              </form>
+            )}
 
-          {step === 'prize' && (
-            <div className="py-8 flex flex-col items-center">
-              <div className="w-full mb-6 relative">
-                <div className="absolute inset-0 bg-yellow-300 opacity-20 rounded-full animate-pulse"></div>
-                <div className="relative bg-gradient-to-r from-yellow-400 to-yellow-600 text-white p-6 rounded-xl shadow-lg text-center">
-                  <h2 className="text-2xl font-bold mb-2">¡Felicidades!</h2>
-                  <p className="text-3xl font-extrabold">{prize}</p>
+            {/* Sección de animación de escaneo */}
+            {step === 'animation' && (
+              <div>
+                <CyberpunkScanAnimation animationProgress={animationProgress} />
+                
+                {/* Información de depuración oculta */}
+                <div className="hidden">
+                  <p>Tiempo de inicio: {scanStartTime ? new Date(scanStartTime).toLocaleTimeString() : 'N/A'}</p>
+                  <p>Duración planificada: 30 segundos</p>
+                  <p>Tiempo transcurrido: {scanStartTime ? ((Date.now() - scanStartTime) / 1000).toFixed(1) : 0} segundos</p>
                 </div>
               </div>
-              
-              {/* Confeti animado */}
-              <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                {[...Array(30)].map((_, i) => (
-                  <div 
-                    key={i} 
-                    className="absolute animate-confetti"
-                    style={{
-                      top: '-5%',
-                      left: `${Math.random() * 100}%`,
-                      width: `${Math.random() * 10 + 5}px`,
-                      height: `${Math.random() * 10 + 10}px`,
-                      background: `hsl(${Math.random() * 360}, 100%, 50%)`,
-                      borderRadius: `${Math.random() > 0.5 ? '50%' : '0'}`,
-                      animationDelay: `${Math.random() * 5}s`,
-                      animationDuration: `${Math.random() * 3 + 2}s`
-                    }}
-                  />
-                ))}
-              </div>
-              
-              <button
-                onClick={() => {
-                  setStep('input');
-                  setCode('');
-                  setPrize('');
-                }}
-                className="mt-8 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200"
-              >
-                Probar otro código
-              </button>
-            </div>
-          )}
+            )}
+
+            {/* Sección del premio */}
+            {step === 'prize' && (
+              <CyberpunkPrize 
+                prizes={prizes}
+                onReset={handleReset} 
+              />
+            )}
+          </div>
         </div>
       </div>
       
+      {/* Estilos para las animaciones */}
       <style jsx global>{`
-        @keyframes confetti {
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        
+        @keyframes float {
           0% {
-            transform: translateY(0) rotate(0deg);
+            transform: translateY(-10px);
             opacity: 1;
           }
           100% {
-            transform: translateY(100vh) rotate(720deg);
+            transform: translateY(120vh);
             opacity: 0;
           }
         }
+        
+        @keyframes confetti {
+          0% {
+            transform: translateY(-10px) rotate(0deg);
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(120vh) rotate(360deg);
+            opacity: 0;
+          }
+        }
+        
+        @keyframes vibrate {
+          0% { transform: translate(0); }
+          20% { transform: translate(-1px, 1px); }
+          40% { transform: translate(-1px, -1px); }
+          60% { transform: translate(1px, 1px); }
+          80% { transform: translate(1px, -1px); }
+          100% { transform: translate(0); }
+        }
+        
+        .animate-vibrate {
+          animation: vibrate 0.05s linear infinite;
+        }
+        
         .animate-confetti {
-          animation: confetti 5s ease-in-out forwards;
+          animation: confetti 4s linear forwards;
+        }
+        
+        .animate-float {
+          animation: float 4s linear forwards;
+        }
+        
+        /* Esconder el scrollbar para una experiencia más inmersiva */
+        body {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        body::-webkit-scrollbar {
+          display: none;
         }
       `}</style>
     </div>
   );
 };
 
-export default MysteryBox;
+export default CyberpunkMysteryBox;
