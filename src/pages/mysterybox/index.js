@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { LockClosedIcon, EnvelopeIcon, ExclamationCircleIcon } from '@heroicons/react/24/solid';
 import { toast } from 'sonner';
 
@@ -8,7 +8,11 @@ import CyberpunkConfetti from './CyberpunkConfetti';
 import CyberpunkPrize from './CyberpunkPrize';
 
 // Constante para la duración exacta de la animación en milisegundos
-const SCAN_DURATION_MS = 30000; // 30 segundos exactamente
+const SCAN_DURATION_MS = 20000; // 30 segundos exactamente
+
+// Usar variables de entorno para configuración (formato Next.js)
+const WEBHOOK_URL = process.env.NEXT_PUBLIC_WEBHOOK_TICKET_URL || 'https://n8n-alternative.wazend.net/webhook-test/809523e8-ca1a-4df1-9936-4da175084d01';
+const TICKET_PURCHASE_URL = process.env.NEXT_PUBLIC_TICKET_PURCHASE_URL || 'https://wa.link/3v3ts0';
 
 const CyberpunkMysteryBox = () => {
   const [code, setCode] = useState('');
@@ -24,6 +28,10 @@ const CyberpunkMysteryBox = () => {
   // Estado para controlar el temporizador de la animación
   const [scanStartTime, setScanStartTime] = useState(null);
   const [animationTimer, setAnimationTimer] = useState(null);
+  
+  // Referencia para el audio de escaneo
+  const scanAudioRef = useRef(null);
+  const confettiAudioRef = useRef(null);
 
   // Manejar envío del formulario
   const handleSubmit = async (e) => {
@@ -52,8 +60,7 @@ const CyberpunkMysteryBox = () => {
     
     // Enviar datos al webhook para validación
     try {
-      const webhookUrl = process.env.NEXT_PUBLIC_WEBHOOK_TICKET_URL;
-      const response = await fetch(webhookUrl, {
+      const response = await fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -103,6 +110,29 @@ const CyberpunkMysteryBox = () => {
     }
   };
 
+  // Inicializar objetos de audio
+  useEffect(() => {
+    // Crear objetos de audio, pero sin reproducirlos aún
+    scanAudioRef.current = new Audio('/scan-sound.mp3');
+    scanAudioRef.current.loop = true;
+    scanAudioRef.current.volume = 0.6;
+    
+    confettiAudioRef.current = new Audio('/confetti-sound.mp3');
+    confettiAudioRef.current.volume = 0.5;
+    
+    // Limpiar al desmontar
+    return () => {
+      if (scanAudioRef.current) {
+        scanAudioRef.current.pause();
+        scanAudioRef.current.currentTime = 0;
+      }
+      if (confettiAudioRef.current) {
+        confettiAudioRef.current.pause();
+        confettiAudioRef.current.currentTime = 0;
+      }
+    };
+  }, []);
+
   // Función para iniciar la animación de escaneo con duración fija
   const startScanAnimation = () => {
     // Cambiar a la pantalla de animación
@@ -114,6 +144,12 @@ const CyberpunkMysteryBox = () => {
     // Registrar el tiempo de inicio
     const startTime = Date.now();
     setScanStartTime(startTime);
+    
+    // Reproducir sonido de escaneo
+    if (scanAudioRef.current) {
+      scanAudioRef.current.currentTime = 0;
+      scanAudioRef.current.play().catch(e => console.log('Audio play failed:', e));
+    }
     
     console.log(`Inicio de escaneo: ${new Date(startTime).toLocaleTimeString()}`);
     console.log(`Duración prevista: 30 segundos`);
@@ -132,6 +168,7 @@ const CyberpunkMysteryBox = () => {
     });
     
     // Configurar temporizadores individuales para cada paso
+    const timers = [];
     animationPlan.forEach(({ step, executeAt }) => {
       const timeoutId = setTimeout(() => {
         if (step <= 100) { // Verificación de seguridad
@@ -144,14 +181,35 @@ const CyberpunkMysteryBox = () => {
             console.log(`Fin de escaneo: ${new Date(endTime).toLocaleTimeString()}`);
             console.log(`Duración real: ${actualDuration.toFixed(2)} segundos`);
             
+            // Detener sonido de escaneo
+            if (scanAudioRef.current) {
+              // Bajar volumen gradualmente
+              const fadeOutInterval = setInterval(() => {
+                if (scanAudioRef.current.volume > 0.05) {
+                  scanAudioRef.current.volume -= 0.05;
+                } else {
+                  clearInterval(fadeOutInterval);
+                  scanAudioRef.current.pause();
+                  scanAudioRef.current.volume = 0.6; // Restaurar volumen original
+                }
+              }, 50);
+            }
+            
             setTimeout(() => setStep('prize'), 500);
           }
         }
       }, executeAt - startTime);
       
-      // Almacenar el ID del temporizador para limpieza
-      setAnimationTimer(prev => [...(prev || []), timeoutId]);
+      timers.push(timeoutId);
     });
+    
+    // Almacenar los IDs de los temporizadores
+    setAnimationTimer(timers);
+  };
+
+  // Función para manejar la compra de ticket
+  const handleBuyTicket = () => {
+    window.open(TICKET_PURCHASE_URL, '_blank');
   };
 
   // Limpiar temporizadores al desmontar o resetear
@@ -169,13 +227,10 @@ const CyberpunkMysteryBox = () => {
       // Mostrar confeti
       setShowConfetti(true);
       
-      // Reproducir sonido de celebración si está disponible
-      try {
-        const audio = new Audio('/confetti-sound.mp3');
-        audio.volume = 0.5;
-        audio.play().catch(e => console.log('Audio play failed:', e));
-      } catch (e) {
-        console.log('Audio not supported:', e);
+      // Reproducir sonido de celebración
+      if (confettiAudioRef.current) {
+        confettiAudioRef.current.currentTime = 0;
+        confettiAudioRef.current.play().catch(e => console.log('Audio play failed:', e));
       }
       
       // Ocultar el confeti después de 20 segundos
@@ -187,12 +242,26 @@ const CyberpunkMysteryBox = () => {
     }
   }, [step]);
 
+  // Efecto para detener el sonido de escaneo cuando se cambia de etapa
+  useEffect(() => {
+    if (step !== 'animation' && scanAudioRef.current) {
+      scanAudioRef.current.pause();
+      scanAudioRef.current.currentTime = 0;
+    }
+  }, [step]);
+
   // Función para volver al inicio
   const handleReset = () => {
     // Limpiar todos los temporizadores pendientes
     if (animationTimer && animationTimer.length > 0) {
       animationTimer.forEach(id => clearTimeout(id));
       setAnimationTimer(null);
+    }
+    
+    // Detener sonidos si están reproduciéndose
+    if (scanAudioRef.current) {
+      scanAudioRef.current.pause();
+      scanAudioRef.current.currentTime = 0;
     }
     
     // Resetear estados
@@ -228,7 +297,7 @@ const CyberpunkMysteryBox = () => {
           
           <div className="p-8">
             <h1 className="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500 mb-6 tracking-wider">
-              CYBER<span className="text-cyan-400">BOX</span>_
+              MYSTERY<span className="text-cyan-400">BOX</span>_
             </h1>
             
             {/* Sección de entrada de código */}
@@ -257,7 +326,7 @@ const CyberpunkMysteryBox = () => {
                 {/* Campo de Código - Ahora segundo */}
                 <div>
                   <label htmlFor="code" className="block text-sm font-medium text-cyan-400 mb-1 uppercase tracking-wider">
-                    // Ingresa código de acceso
+                    // Ingresa tu ticket
                   </label>
                   <div className="relative">
                     <input
@@ -287,14 +356,14 @@ const CyberpunkMysteryBox = () => {
                   type="submit"
                   className="w-full bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-500 hover:to-purple-500 text-white font-bold py-3 px-4 rounded-lg transition duration-200 relative overflow-hidden group"
                 >
-                  <span className="relative z-10 uppercase tracking-wider">Iniciar Escaneo</span>
+                  <span className="relative z-10 uppercase tracking-wider">Canejar ahora</span>
                   <span className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-cyan-400 to-purple-400 opacity-0 group-hover:opacity-20 transition-opacity"></span>
                 </button>
                 
                 {/* Botón de Comprar Ticket */}
                 <button
                   type="button"
-                  onClick={() => window.open('#', '_blank')}
+                  onClick={handleBuyTicket}
                   className="w-full mt-4 bg-gray-800 border border-cyan-500 hover:bg-gray-700 text-cyan-400 font-bold py-3 px-4 rounded-lg transition duration-200 relative overflow-hidden group"
                 >
                   <span className="relative z-10 uppercase tracking-wider">Comprar Ticket</span>

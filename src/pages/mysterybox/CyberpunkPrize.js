@@ -29,7 +29,7 @@ const CyberpunkPrize = ({ prizes = [], onReset }) => {
             </svg>
           </div>
           
-          <h2 className="text-xl font-bold mb-3 text-cyan-400 uppercase tracking-wider">¡Código Aceptado!</h2>
+          <h2 className="text-xl font-bold mb-3 text-cyan-400 uppercase tracking-wider">¡GANASTE!</h2>
           
           {/* Lista de premios */}
           <div className="space-y-4">
@@ -61,7 +61,7 @@ const CyberpunkPrize = ({ prizes = [], onReset }) => {
         className="mt-8 bg-gray-800 hover:bg-gray-700 text-cyan-400 border border-cyan-600 font-bold py-3 px-6 rounded-lg transition duration-200 flex items-center space-x-2 group"
       >
         <ArrowLongLeftIcon className="w-5 h-5 group-hover:rotate-180 transition-transform duration-300" />
-        <span className="uppercase tracking-wider">Probar otro código</span>
+        <span className="uppercase tracking-wider">Canjear otro código</span>
       </button>
     </div>
   );
