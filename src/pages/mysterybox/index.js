@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { LockClosedIcon, EnvelopeIcon, ExclamationCircleIcon } from '@heroicons/react/24/solid';
 import { toast } from 'sonner';
+import Image from 'next/image';
+
 
 // Componentes modulares
 import CyberpunkScanAnimation from './CyberpunkScanAnimation';
@@ -8,7 +10,7 @@ import CyberpunkConfetti from './CyberpunkConfetti';
 import CyberpunkPrize from './CyberpunkPrize';
 
 // Constante para la duración exacta de la animación en milisegundos
-const SCAN_DURATION_MS = 20000; // 30 segundos exactamente
+const SCAN_DURATION_MS = 10000; // 30 segundos exactamente
 
 // Usar variables de entorno para configuración (formato Next.js)
 const WEBHOOK_URL = process.env.NEXT_PUBLIC_WEBHOOK_TICKET_URL || 'https://n8n-alternative.wazend.net/webhook-test/809523e8-ca1a-4df1-9936-4da175084d01';
@@ -24,11 +26,11 @@ const CyberpunkMysteryBox = () => {
   const [error, setError] = useState('');
   const [animationProgress, setAnimationProgress] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
-  
+
   // Estado para controlar el temporizador de la animación
   const [scanStartTime, setScanStartTime] = useState(null);
   const [animationTimer, setAnimationTimer] = useState(null);
-  
+
   // Referencia para el audio de escaneo
   const scanAudioRef = useRef(null);
   const confettiAudioRef = useRef(null);
@@ -36,20 +38,20 @@ const CyberpunkMysteryBox = () => {
   // Manejar envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validar campos vacíos (validación mínima en el frontend)
     if (code.trim() === '') {
       setError('Por favor ingresa un código');
       toast.error('Por favor ingresa un código');
       return;
     }
-    
+
     if (email.trim() === '') {
       setError('Por favor ingresa tu email');
       toast.error('Por favor ingresa tu email');
       return;
     }
-    
+
     // Validación básica de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
@@ -57,7 +59,7 @@ const CyberpunkMysteryBox = () => {
       toast.error('Por favor ingresa un email válido');
       return;
     }
-    
+
     // Enviar datos al webhook para validación
     try {
       const response = await fetch(WEBHOOK_URL, {
@@ -70,19 +72,19 @@ const CyberpunkMysteryBox = () => {
           code: code
         }),
       });
-      
+
       const data = await response.json();
-      
+
       if (data.error) {
         // Si el webhook responde con error, mostrar toast pero no iniciar el escaneo
         setError(data.message || 'Código inválido. Intenta de nuevo.');
         toast.error(data.message || 'Código inválido. Intenta de nuevo.');
         return;
       }
-      
+
       // Limpiar cualquier error previo
       setError('');
-      
+
       // Manejar diferentes formatos de respuesta para premios
       if (data.prizes && Array.isArray(data.prizes) && data.prizes.length > 0) {
         // Si recibimos un array de premios
@@ -101,7 +103,7 @@ const CyberpunkMysteryBox = () => {
         setPrize('¡Premio misterioso!');
         setPrizes([{ name: '¡Premio misterioso!' }]);
       }
-      
+
       // Iniciar la animación de escaneo
       startScanAnimation();
     } catch (error) {
@@ -116,10 +118,10 @@ const CyberpunkMysteryBox = () => {
     scanAudioRef.current = new Audio('/scan-sound.mp3');
     scanAudioRef.current.loop = true;
     scanAudioRef.current.volume = 0.6;
-    
+
     confettiAudioRef.current = new Audio('/confetti-sound.mp3');
     confettiAudioRef.current.volume = 0.5;
-    
+
     // Limpiar al desmontar
     return () => {
       if (scanAudioRef.current) {
@@ -137,26 +139,26 @@ const CyberpunkMysteryBox = () => {
   const startScanAnimation = () => {
     // Cambiar a la pantalla de animación
     setStep('animation');
-    
+
     // Resetear el progreso
     setAnimationProgress(0);
-    
+
     // Registrar el tiempo de inicio
     const startTime = Date.now();
     setScanStartTime(startTime);
-    
+
     // Reproducir sonido de escaneo
     if (scanAudioRef.current) {
       scanAudioRef.current.currentTime = 0;
       scanAudioRef.current.play().catch(e => console.log('Audio play failed:', e));
     }
-    
+
     console.log(`Inicio de escaneo: ${new Date(startTime).toLocaleTimeString()}`);
     console.log(`Duración prevista: 30 segundos`);
-    
+
     // Crear un array de 100 pasos para la animación (0% a 100%)
     const steps = Array.from({ length: 101 }, (_, i) => i);
-    
+
     // Calcular el tiempo de inicio y fin para cada paso
     const animationPlan = steps.map(step => {
       // Cada paso debe ocurrir en un momento específico durante los 30 segundos
@@ -166,21 +168,21 @@ const CyberpunkMysteryBox = () => {
         executeAt: startTime + timeOffset
       };
     });
-    
+
     // Configurar temporizadores individuales para cada paso
     const timers = [];
     animationPlan.forEach(({ step, executeAt }) => {
       const timeoutId = setTimeout(() => {
         if (step <= 100) { // Verificación de seguridad
           setAnimationProgress(step);
-          
+
           // Si es el último paso, mostrar el premio después de un breve retraso
           if (step === 100) {
             const endTime = Date.now();
             const actualDuration = (endTime - startTime) / 1000;
             console.log(`Fin de escaneo: ${new Date(endTime).toLocaleTimeString()}`);
             console.log(`Duración real: ${actualDuration.toFixed(2)} segundos`);
-            
+
             // Detener sonido de escaneo
             if (scanAudioRef.current) {
               // Bajar volumen gradualmente
@@ -194,15 +196,15 @@ const CyberpunkMysteryBox = () => {
                 }
               }, 50);
             }
-            
+
             setTimeout(() => setStep('prize'), 500);
           }
         }
       }, executeAt - startTime);
-      
+
       timers.push(timeoutId);
     });
-    
+
     // Almacenar los IDs de los temporizadores
     setAnimationTimer(timers);
   };
@@ -226,18 +228,18 @@ const CyberpunkMysteryBox = () => {
     if (step === 'prize') {
       // Mostrar confeti
       setShowConfetti(true);
-      
+
       // Reproducir sonido de celebración
       if (confettiAudioRef.current) {
         confettiAudioRef.current.currentTime = 0;
         confettiAudioRef.current.play().catch(e => console.log('Audio play failed:', e));
       }
-      
+
       // Ocultar el confeti después de 20 segundos
       const timer = setTimeout(() => {
         setShowConfetti(false);
       }, 20000);
-      
+
       return () => clearTimeout(timer);
     }
   }, [step]);
@@ -257,13 +259,13 @@ const CyberpunkMysteryBox = () => {
       animationTimer.forEach(id => clearTimeout(id));
       setAnimationTimer(null);
     }
-    
+
     // Detener sonidos si están reproduciéndose
     if (scanAudioRef.current) {
       scanAudioRef.current.pause();
       scanAudioRef.current.currentTime = 0;
     }
-    
+
     // Resetear estados
     setStep('input');
     setCode('');
@@ -276,10 +278,23 @@ const CyberpunkMysteryBox = () => {
   };
 
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-screen bg-black overflow-hidden">
+    <div
+      className="relative flex flex-col items-center justify-center min-h-screen bg-cover bg-center overflow-hidden"
+      style={{ backgroundImage: "url('/background.webp')" }} // Aquí se referencia la imagen dentro de la carpeta public
+    >
       {/* Componente de confeti */}
       <CyberpunkConfetti show={showConfetti} />
-      
+
+      <div className="flex justify-center mb-6">
+        <Image
+          src="/logo.svg"
+          alt="Logo"
+          width={128}  // Ajusta el tamaño según sea necesario
+          height={128}  // Ajusta el tamaño según sea necesario
+          className="object-contain"  // Asegura que la imagen mantenga su proporción
+        />
+      </div>
+
       {/* Contenedor principal */}
       <div className="relative z-10 w-full max-w-md">
         <div className="relative bg-gray-900 bg-opacity-80 backdrop-blur-sm rounded-xl border border-cyan-500 shadow-2xl overflow-hidden">
@@ -288,18 +303,31 @@ const CyberpunkMysteryBox = () => {
           <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-cyan-500 via-purple-500 to-cyan-500"></div>
           <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-cyan-500"></div>
           <div className="absolute top-0 right-0 w-1 h-full bg-gradient-to-b from-cyan-500 via-purple-500 to-cyan-500"></div>
-          
+
           {/* Esquinas con detalle cyber */}
           <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-cyan-400"></div>
           <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-cyan-400"></div>
           <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-cyan-400"></div>
           <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-cyan-400"></div>
-          
+
           <div className="p-8">
-            <h1 className="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500 mb-6 tracking-wider">
+
+
+            <div className="flex justify-center mb-10">
+              <Image
+                src="/textbox.png"
+                alt="Logo"
+                width={200}  // Ajusta el tamaño según sea necesario
+                height={128}  // Ajusta el tamaño según sea necesario
+                className="object-contain"  // Asegura que la imagen mantenga su proporción
+              />
+            </div>
+
+
+            {/* <h1 className="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500 mb-6 tracking-wider">
               MYSTERY<span className="text-cyan-400">BOX</span>_
-            </h1>
-            
+            </h1> */}
+
             {/* Sección de entrada de código */}
             {step === 'input' && (
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -322,7 +350,7 @@ const CyberpunkMysteryBox = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Campo de Código - Ahora segundo */}
                 <div>
                   <label htmlFor="code" className="block text-sm font-medium text-cyan-400 mb-1 uppercase tracking-wider">
@@ -341,7 +369,7 @@ const CyberpunkMysteryBox = () => {
                       <LockClosedIcon className="h-5 w-5 text-cyan-500" />
                     </div>
                   </div>
-                  
+
                   {/* Mensaje de error */}
                   {error && (
                     <p className="mt-2 text-sm text-red-500 flex items-center">
@@ -350,7 +378,7 @@ const CyberpunkMysteryBox = () => {
                     </p>
                   )}
                 </div>
-                
+
                 {/* Botón de envío */}
                 <button
                   type="submit"
@@ -359,7 +387,7 @@ const CyberpunkMysteryBox = () => {
                   <span className="relative z-10 uppercase tracking-wider">Canejar ahora</span>
                   <span className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-cyan-400 to-purple-400 opacity-0 group-hover:opacity-20 transition-opacity"></span>
                 </button>
-                
+
                 {/* Botón de Comprar Ticket */}
                 <button
                   type="button"
@@ -376,7 +404,7 @@ const CyberpunkMysteryBox = () => {
             {step === 'animation' && (
               <div>
                 <CyberpunkScanAnimation animationProgress={animationProgress} />
-                
+
                 {/* Información de depuración oculta */}
                 <div className="hidden">
                   <p>Tiempo de inicio: {scanStartTime ? new Date(scanStartTime).toLocaleTimeString() : 'N/A'}</p>
@@ -388,15 +416,15 @@ const CyberpunkMysteryBox = () => {
 
             {/* Sección del premio */}
             {step === 'prize' && (
-              <CyberpunkPrize 
+              <CyberpunkPrize
                 prizes={prizes}
-                onReset={handleReset} 
+                onReset={handleReset}
               />
             )}
           </div>
         </div>
       </div>
-      
+
       {/* Estilos para las animaciones */}
       <style jsx global>{`
         @keyframes shimmer {

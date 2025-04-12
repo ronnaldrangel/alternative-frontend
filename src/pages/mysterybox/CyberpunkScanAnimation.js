@@ -97,11 +97,11 @@ const CyberpunkScanAnimation = ({ animationProgress = 0, onComplete }) => {
       </div>
       
       {/* Líneas de código simuladas */}
-      <div className="w-full font-mono text-xs space-y-0.5 text-left mb-4">
-        <p className="text-green-500">&gt; Iniciando escaneo de seguridad...</p>
+      <div className="w-full font-mono text-md space-y-0.5 text-left mb-4">
+        <p className="text-green-500">&gt; Iniciando escaneo...</p>
         {animationProgress > 20 && <p className="text-cyan-400">&gt; Validando cifrado...</p>}
-        {animationProgress > 40 && <p className="text-cyan-400">&gt; Analizando estructura...</p>}
-        {animationProgress > 60 && <p className="text-yellow-400">&gt; Secuencia detectada! Decodificando...</p>}
+        {animationProgress > 40 && <p className="text-cyan-400">&gt; Buscando las mejores ofertas...</p>}
+        {animationProgress > 60 && <p className="text-yellow-400">&gt; Oferta encontrada! Decodificando...</p>}
         {animationProgress > 80 && <p className="text-purple-400">&gt; Extrayendo datos de premio...</p>}
         {animationProgress > 95 && <p className="text-green-500">&gt; ¡Descifrado completo!</p>}
       </div>
