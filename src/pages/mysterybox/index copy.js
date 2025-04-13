@@ -3,6 +3,7 @@ import { LockClosedIcon, EnvelopeIcon, ExclamationCircleIcon } from '@heroicons/
 import { toast } from 'sonner';
 import Image from 'next/image';
 
+
 // Componentes modulares
 import CyberpunkScanAnimation from './CyberpunkScanAnimation';
 import CyberpunkConfetti from './CyberpunkConfetti';
@@ -25,8 +26,6 @@ const CyberpunkMysteryBox = () => {
   const [error, setError] = useState('');
   const [animationProgress, setAnimationProgress] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
-  // Nuevo estado para controlar si el botón está cargando/bloqueado
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Estado para controlar el temporizador de la animación
   const [scanStartTime, setScanStartTime] = useState(null);
@@ -39,9 +38,6 @@ const CyberpunkMysteryBox = () => {
   // Manejar envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Si ya está en proceso de envío, no hacer nada
-    if (isSubmitting) return;
 
     // Validar campos vacíos (validación mínima en el frontend)
     if (code.trim() === '') {
@@ -64,10 +60,6 @@ const CyberpunkMysteryBox = () => {
       return;
     }
 
-    // Marcar como en proceso de envío
-    setIsSubmitting(true);
-    setError('');
-
     // Enviar datos al webhook para validación
     try {
       const response = await fetch(WEBHOOK_URL, {
@@ -87,7 +79,6 @@ const CyberpunkMysteryBox = () => {
         // Si el webhook responde con error, mostrar toast pero no iniciar el escaneo
         setError(data.message || 'Código inválido. Intenta de nuevo.');
         toast.error(data.message || 'Código inválido. Intenta de nuevo.');
-        setIsSubmitting(false); // Desbloquear el botón
         return;
       }
 
@@ -115,11 +106,9 @@ const CyberpunkMysteryBox = () => {
 
       // Iniciar la animación de escaneo
       startScanAnimation();
-      // No reseteamos isSubmitting aquí porque pasamos a la animación
     } catch (error) {
       setError('Error de conexión. Intenta de nuevo más tarde.');
       toast.error('Error de conexión. Intenta de nuevo más tarde.');
-      setIsSubmitting(false); // Desbloquear el botón en caso de error
     }
   };
 
@@ -208,10 +197,7 @@ const CyberpunkMysteryBox = () => {
               }, 50);
             }
 
-            setTimeout(() => {
-              setStep('prize');
-              setIsSubmitting(false); // Resetear estado de envío al finalizar todo
-            }, 500);
+            setTimeout(() => setStep('prize'), 500);
           }
         }
       }, executeAt - startTime);
@@ -289,13 +275,12 @@ const CyberpunkMysteryBox = () => {
     setAnimationProgress(0);
     setShowConfetti(false);
     setScanStartTime(null);
-    setIsSubmitting(false); // Asegurarse de que el botón quede desbloqueado
   };
 
   return (
     <div
       className="relative flex flex-col items-center justify-center min-h-screen bg-cover bg-center overflow-hidden"
-      style={{ backgroundImage: "url('/background.webp')" }}
+      style={{ backgroundImage: "url('/background.webp')" }} // Aquí se referencia la imagen dentro de la carpeta public
     >
       {/* Componente de confeti */}
       <CyberpunkConfetti show={showConfetti} />
@@ -304,9 +289,9 @@ const CyberpunkMysteryBox = () => {
         <Image
           src="/logo.svg"
           alt="Logo"
-          width={128}
-          height={128}
-          className="object-contain"
+          width={128}  // Ajusta el tamaño según sea necesario
+          height={128}  // Ajusta el tamaño según sea necesario
+          className="object-contain"  // Asegura que la imagen mantenga su proporción
         />
       </div>
 
@@ -326,15 +311,22 @@ const CyberpunkMysteryBox = () => {
           <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-cyan-400"></div>
 
           <div className="p-8">
+
+
             <div className="flex justify-center mb-10">
               <Image
                 src="/textbox.png"
                 alt="Logo"
-                width={200}
-                height={128}
-                className="object-contain"
+                width={200}  // Ajusta el tamaño según sea necesario
+                height={128}  // Ajusta el tamaño según sea necesario
+                className="object-contain"  // Asegura que la imagen mantenga su proporción
               />
             </div>
+
+
+            {/* <h1 className="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500 mb-6 tracking-wider">
+              MYSTERY<span className="text-cyan-400">BOX</span>_
+            </h1> */}
 
             {/* Sección de entrada de código */}
             {step === 'input' && (
@@ -352,7 +344,6 @@ const CyberpunkMysteryBox = () => {
                       onChange={(e) => setEmail(e.target.value)}
                       className="w-full px-4 py-3 bg-gray-800 text-cyan-300 rounded-lg border border-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent placeholder-cyan-700"
                       placeholder="usuario@dominio.com"
-                      disabled={isSubmitting}
                     />
                     <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                       <EnvelopeIcon className="h-5 w-5 text-cyan-500" />
@@ -373,7 +364,6 @@ const CyberpunkMysteryBox = () => {
                       onChange={(e) => setCode(e.target.value)}
                       className="w-full px-4 py-3 bg-gray-800 text-cyan-300 rounded-lg border border-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent placeholder-cyan-700"
                       placeholder="XXXX-XXXX-XXXX"
-                      disabled={isSubmitting}
                     />
                     <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                       <LockClosedIcon className="h-5 w-5 text-cyan-500" />
@@ -389,37 +379,23 @@ const CyberpunkMysteryBox = () => {
                   )}
                 </div>
 
-                {/* Botón de envío con estado de carga */}
+                {/* Botón de envío */}
                 <button
                   type="submit"
-                  disabled={isSubmitting}
-                  className={`w-full bg-gradient-to-r ${
-                    isSubmitting 
-                      ? 'from-gray-600 to-gray-700 cursor-not-allowed' 
-                      : 'from-cyan-600 to-purple-600 hover:from-cyan-500 hover:to-purple-500'
-                  } text-white font-bold py-3 px-4 rounded-lg transition duration-200 relative overflow-hidden`}
+                  className="w-full bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-500 hover:to-purple-500 text-white font-bold py-3 px-4 rounded-lg transition duration-200 relative overflow-hidden group"
                 >
-                  <span className="relative z-10 uppercase tracking-wider">
-                    {isSubmitting ? 'Procesando...' : 'Canjear ahora'}
-                  </span>
-                  {!isSubmitting && (
-                    <span className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-cyan-400 to-purple-400 opacity-0 group-hover:opacity-20 transition-opacity"></span>
-                  )}
+                  <span className="relative z-10 uppercase tracking-wider">Canejar ahora</span>
+                  <span className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-cyan-400 to-purple-400 opacity-0 group-hover:opacity-20 transition-opacity"></span>
                 </button>
 
                 {/* Botón de Comprar Ticket */}
                 <button
                   type="button"
                   onClick={handleBuyTicket}
-                  disabled={isSubmitting}
-                  className={`w-full mt-4 bg-gray-800 border border-cyan-500 ${
-                    isSubmitting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-700'
-                  } text-cyan-400 font-bold py-3 px-4 rounded-lg transition duration-200 relative overflow-hidden group`}
+                  className="w-full mt-4 bg-gray-800 border border-cyan-500 hover:bg-gray-700 text-cyan-400 font-bold py-3 px-4 rounded-lg transition duration-200 relative overflow-hidden group"
                 >
                   <span className="relative z-10 uppercase tracking-wider">Comprar Ticket</span>
-                  {!isSubmitting && (
-                    <span className="absolute top-0 left-0 w-full h-full bg-cyan-500 opacity-0 group-hover:opacity-10 transition-opacity"></span>
-                  )}
+                  <span className="absolute top-0 left-0 w-full h-full bg-cyan-500 opacity-0 group-hover:opacity-10 transition-opacity"></span>
                 </button>
               </form>
             )}
