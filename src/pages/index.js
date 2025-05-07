@@ -93,6 +93,32 @@ export default function Home() {
               />
             </div>
             <p className="text-sm text-gray-500">© {new Date().getFullYear()} Alternative. Todos los derechos reservados.</p>
+
+            {/* Disclaimers */}
+            <div className="mt-3 mb-3 px-4 max-w-2xl">
+              <p className="text-xs text-gray-500 mb-2">
+                Todos los productos y licencias ofrecidos son originales y autorizados. No promovemos ni vendemos software pirata ni materiales incumpliendo derechos de autor.
+              </p>
+              <p className="text-xs text-gray-500">
+                TikTok es una marca registrada de ByteDance. Este sitio no está afiliado, patrocinado ni avalado por TikTok.
+              </p>
+            </div>
+
+            {/* Links de política de privacidad y términos y condiciones */}
+            <div className="mt-4 flex space-x-6">
+              <a
+                href="/privacy-policy"
+                className="text-sm text-gray-500 hover:text-gray-400 transition-colors duration-300"
+              >
+                Política de Privacidad
+              </a>
+              <a
+                href="/terms-and-conditions"
+                className="text-sm text-gray-500 hover:text-gray-400 transition-colors duration-300"
+              >
+                Términos y Condiciones
+              </a>
+            </div>
           </div>
         </div>
       </footer>
