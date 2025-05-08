@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { SparklesIcon } from "@heroicons/react/24/solid";
 import Image from "next/image";
 import Head from 'next/head';
-import ProductsSection from '@/pages/ProductsSection';
 
 // Importamos los componentes y servicios con lazy loading
+const ProductsSection = React.lazy(() => import('@/components/ProductsSection'));
 const ContactForm = React.lazy(() => import('@/components/ContactForm'));
 
 export default function Home() {
