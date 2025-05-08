@@ -1,16 +1,29 @@
-// pages/index.js
 import React, { Suspense } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SparklesIcon } from "@heroicons/react/24/solid";
 import Image from "next/image";
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 
 // Importamos los componentes y servicios con lazy loading
 const ProductsSection = React.lazy(() => import('@/components/ProductsSection'));
 const ContactForm = React.lazy(() => import('@/components/ContactForm'));
 
 export default function Home() {
+  const router = useRouter();
+  const { country } = router.query; // Obtenemos el query param "country"
+
+  // Función para determinar el texto a mostrar basado en el país
+  const getCountryText = () => {
+    if (country === 'MX') {
+      return 'Mexico';
+    } else if (country === 'BOL') {
+      return 'Bolivia';
+    }
+    return null;
+  };
+
   return (
     <div className="min-h-screen bg-black text-gray-200 transition-colors duration-300">
       {/* Header con SEO */}
@@ -20,8 +33,9 @@ export default function Home() {
       </Head>
 
       <header className="bg-black text-white py-4 px-6 shadow-sm border-b border-zinc-800 sticky top-0 z-50 transition-all duration-300">
-        <div className="container mx-auto flex justify-center items-center">
-          <div className="flex items-center">
+        <div className="container mx-auto flex items-center justify-center">
+          {/* Logo centrado */}
+          <div className="flex items-center justify-center">
             <Image
               src="https://landing-alternative.b-cdn.net/Logo%20Negativo.svg"
               alt="Alternative Logo"
@@ -31,6 +45,11 @@ export default function Home() {
               priority // Asegura que el logo se cargue de inmediato
             />
           </div>
+
+          {/* Mostrar el texto correspondiente si el query param "country" es "MX" o "BOL" */}
+          {getCountryText() && (
+            <div className="text-white font-semibold ml-4">{getCountryText()}</div>
+          )}
         </div>
       </header>
 
@@ -59,9 +78,7 @@ export default function Home() {
       {/* Sección de ofertas secundarias */}
       <div id="contact" className="py-12 bg-gradient-to-br from-black to-zinc-900">
         <div className="container mx-auto px-4 sm:px-6">
-          {/* <div className="bg-zinc-900/70 backdrop-blur-md rounded-2xl shadow-2xl border border-zinc-800 p-8 lg:p-10"> */}
           <div className="bg-zinc-900/70 rounded-2xl shadow-2xl border border-zinc-800 p-8 lg:p-10">
-
             <div className="text-center mb-10">
               <h2 className="text-2xl md:text-3xl font-bold mb-4 text-white">Quiero realizar la compra</h2>
               <div className="h-1 w-32 bg-red-600 mx-auto rounded-full"></div>
