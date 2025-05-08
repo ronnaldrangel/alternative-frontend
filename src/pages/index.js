@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { SparklesIcon } from "@heroicons/react/24/solid";
 import Image from "next/image";
 import Head from 'next/head';
+import ProductsSection from '@/pages/ProductsSection';
 
 // Importamos los componentes y servicios con lazy loading
-const ProductsSection = React.lazy(() => import('@/components/ProductsSection'));
 const ContactForm = React.lazy(() => import('@/components/ContactForm'));
 
 export default function Home() {
@@ -16,7 +16,7 @@ export default function Home() {
       {/* Header con SEO */}
       <Head>
         <meta name="description" content="Las mejores ofertas en juegos y licencias hasta el 50% de descuento. Compra fácil y rápido" />
-        <title>Alternativa - Ofertas de Juegos y Licencias</title>
+        <title>Alternative - Ofertas de Juegos y Licencias</title>
       </Head>
 
       <header className="bg-black text-white py-4 px-6 shadow-sm border-b border-zinc-800 sticky top-0 z-50 transition-all duration-300">
