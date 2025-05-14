@@ -4,6 +4,7 @@ import { useStrapiData } from '@/services/strapiService';
 import { ShoppingCartIcon, HeartIcon, ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
 import Image from "next/image";
 import SpinLoader from '@/components/loader/spinner';
+import { SparklesIcon } from '@heroicons/react/24/solid';
 
 const ProductCard = ({ product, index }) => (
   <div
@@ -43,8 +44,8 @@ const ProductCard = ({ product, index }) => (
           className="w-full bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-500/20 hover:shadow-green-600/30 transition-all duration-300 rounded-full py-3 font-semibold flex items-center justify-center z-10"
           onClick={() => window.location.href = '#contact'}
         >
-          <ShoppingCartIcon className="w-5 h-5 mr-2" />
-          Comprar Ahora
+          <SparklesIcon className="w-5 h-5 mr-2" />
+          Quiero este
         </button>
       </div>
     </div>

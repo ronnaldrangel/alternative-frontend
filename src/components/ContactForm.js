@@ -118,8 +118,8 @@ const ContactForm = () => {
           <div className="mt-1 flex">
             <div className="flex-shrink-0 bg-zinc-800 border border-r-0 border-zinc-700 rounded-l-xl px-3 flex items-center">
               <Image
-                src="https://landing-alternative.b-cdn.net/peru.svg"
-                alt="Bandera de Perú"
+                src="images/flags/peru.svg"
+                alt="Perú"
                 width={20}
                 height={15}
               />

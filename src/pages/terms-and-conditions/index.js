@@ -15,8 +15,8 @@ export default function TermsAndConditions() {
       <header className="mb-8 cursor-pointer">
         <Link href="/">
           <Image
-            src="https://landing-alternative.b-cdn.net/Logo%20Negativo.svg"
-            alt="Alternative Logo"
+            src="/logo.svg"
+            alt="Logo"
             width={180}
             height={50}
             className="h-8 w-auto"

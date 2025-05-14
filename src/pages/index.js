@@ -37,8 +37,8 @@ export default function Home() {
           {/* Logo centrado */}
           <div className="flex items-center justify-center">
             <Image
-              src="https://landing-alternative.b-cdn.net/Logo%20Negativo.svg"
-              alt="Alternative Logo"
+              src="/logo.svg"
+              alt="Logo"
               width={180}
               height={50}
               className="h-8 w-auto"
@@ -101,15 +101,15 @@ export default function Home() {
           <div className="flex flex-col items-center justify-center text-center">
             <div className="mb-6">
               <Image
-                src="https://landing-alternative.b-cdn.net/Logo%20Negativo.svg"
-                alt="Alternative Logo"
+                src="/logo.svg"
+                alt="Logo"
                 width={140}
                 height={35}
                 className="h-8 w-auto"
                 priority // Asegura que el logo del pie de página se cargue rápido
               />
             </div>
-            <p className="text-sm text-gray-500">© {new Date().getFullYear()} Alternative. Todos los derechos reservados.</p>
+            <p className="text-sm text-gray-500">© {new Date().getFullYear()} Alternative Latam. Todos los derechos reservados.</p>
 
             {/* Disclaimers */}
             <div className="mt-3 mb-3 px-4 max-w-2xl">
